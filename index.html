@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RILLZY DEX</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+    :root {
+      --hitam:#05050E; --gelap:#0C0C20; --biru-cyber:#2979FF; --ungu-cyber:#9D65FF;
+      --cyber-aksen:#00F0FF; --teks:#F0F4FF; --glass:rgba(255,255,255,0.08);
+      --glass-border:rgba(255,255,255,0.18); --error:#FF4D6D; --sukses:#2EE6A8;
+    }
+    body {
+      background:linear-gradient(135deg,var(--hitam) 0%,var(--gelap) 50%,#0A0A28 100%);
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; color:var(--teks); padding:2rem 1.5rem; overflow-x:hidden;
+    }
+    .dekor { position:fixed; width:260px; height:260px; border-radius:50%;
+      background:radial-gradient(circle,rgba(0,240,255,0.14),transparent 72%);
+      pointer-events:none; z-index:0; }
+    .dekor.satu { top:6%; left:4%; } .dekor.dua { bottom:6%; right:4%; }
+
+    .view { display:none; width:100%; max-width:680px; z-index:10;
+      backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+      background:var(--glass); border:1px solid var(--glass-border);
+      border-radius:24px; padding:3rem 2rem;
+      box-shadow:0 20px 60px rgba(0,240,255,0.12); animation:fadeIn 0.35s ease; }
+    .view.aktif { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+    .logo-top { font-size:1.1rem; color:var(--cyber-aksen); letter-spacing:0.22em;
+      margin-bottom:2.2rem; text-transform:uppercase; text-align:center; }
+    h1 { font-size:clamp(2.4rem,8vw,4.2rem); line-height:1.1; margin-bottom:1rem;
+      background:linear-gradient(90deg,var(--biru-cyber),var(--ungu-cyber),var(--cyber-aksen));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      text-shadow:0 0 30px rgba(0,240,255,0.35); text-align:center; }
+    h2 { font-size:clamp(1.8rem,5vw,2.6rem); margin-bottom:0.6rem; text-align:center;
+      background:linear-gradient(90deg,var(--biru-cyber),var(--cyber-aksen));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    .sub-title { font-size:1.15rem; color:#B8C4FF; margin-bottom:2.4rem; text-align:center; }
+
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
+      background:linear-gradient(90deg,var(--biru-cyber),var(--ungu-cyber)); color:white;
+      padding:1.1rem 3rem; border-radius:14px; text-decoration:none; font-size:1.2rem;
+      font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,0.12);
+      transition:all 0.25s ease; box-shadow:0 10px 30px rgba(41,121,255,0.28); }
+    .btn:hover { transform:translateY(-4px); box-shadow:0 16px 45px rgba(0,240,255,0.45);
+      background:linear-gradient(90deg,var(--ungu-cyber),var(--cyber-aksen)); }
+    .btn:active { transform:translateY(-1px); }
+    .btn-full { width:100%; }
+    .btn-sekunder { background:transparent; border:1px solid var(--glass-border);
+      box-shadow:none; font-size:1rem; padding:0.85rem 1.6rem; }
+    .btn-sekunder:hover { background:rgba(255,255,255,0.06);
+      box-shadow:0 6px 20px rgba(0,240,255,0.18); }
+    .btn-bahaya { background:linear-gradient(90deg,#FF4D6D,#FF8A5C);
+      box-shadow:0 10px 30px rgba(255,77,109,0.3); }
+    .btn-bahaya:hover { background:linear-gradient(90deg,#FF8A5C,#FF4D6D);
+      box-shadow:0 16px 45px rgba(255,77,109,0.45); }
+    .btn-area { text-align:center; }
+
+    .form-group { margin-bottom:1.3rem; text-align:left; }
+    .form-group label { display:block; font-size:0.9rem; color:#B8C4FF; margin-bottom:0.45rem; }
+    .form-group input, .form-group select {
+      width:100%; padding:0.95rem 1.1rem; border-radius:12px;
+      border:1px solid var(--glass-border); background:rgba(255,255,255,0.05);
+      color:var(--teks); font-size:1rem; outline:none;
+      transition:border-color 0.2s ease, box-shadow 0.2s ease; }
+    .form-group input:focus, .form-group select:focus {
+      border-color:var(--cyber-aksen); box-shadow:0 0 0 3px rgba(0,240,255,0.18); }
+    .form-group input::placeholder { color:#6E7BB8; }
+    .form-group select option { background:#0C0C20; color:#F0F4FF; }
+
+    .pesan { min-height:1.4rem; font-size:0.85rem; margin-bottom:1rem;
+      text-align:center; transition:color 0.2s ease; }
+    .pesan.error { color:var(--error); } .pesan.sukses { color:var(--sukses); }
+
+    .link-kecil { color:var(--cyber-aksen); text-decoration:none; font-size:0.9rem; cursor:pointer; }
+    .link-kecil:hover { text-decoration:underline; }
+
+    .welcome { text-align:center; font-size:1.15rem; color:#B8C4FF; margin-bottom:2rem; }
+    .welcome strong { color:var(--cyber-aksen); }
+    .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:1rem; margin-bottom:2.2rem; }
+    .info-card { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border);
+      border-radius:16px; padding:1.3rem 1rem; text-align:center; }
+    .info-card .label { font-size:0.8rem; color:#8A98D8; text-transform:uppercase;
+      letter-spacing:0.08em; margin-bottom:0.4rem; }
+    .info-card .nilai { font-size:1.4rem; font-weight:700; color:var(--cyber-aksen); }
+
+    .email-info { margin-top:2rem; font-size:0.9rem; color:#A0B0FF; text-align:center; }
+    .email-info a { color:var(--cyber-aksen); text-decoration:none; }
+    .email-info a:hover { text-decoration:underline; }
+    footer { position:fixed; bottom:1.4rem; left:0; width:100%; text-align:center;
+      color:#8A98D8; font-size:0.8rem; z-index:5; }
+
+    @media (max-width:500px) {
+      .btn { padding:0.95rem 2.3rem; font-size:1.05rem; }
+      .view { padding:2.2rem 1.4rem; }
+      footer { position:static; margin-top:2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dekor satu"></div>
+  <div class="dekor dua"></div>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="view-home" class="view aktif">
+    <div class="logo-top">RILLZY DEX</div>
+    <h1>RILLZY DEX</h1>
+    <p class="sub-title">Platform Cyberpunk 2026 Liquid Glass Smooth</p>
+    <div class="btn-area">
+      <button class="btn" data-nav="login">Masuk Rillzy Dex</button>
+    </div>
+    <p style="text-align:center;margin-top:1.4rem;font-size:0.9rem;color:#8A98D8;">
+      Belum punya akun? <a class="link-kecil" data-nav="register">Daftar di sini</a>
+    </p>
+    <p class="email-info">📩 <a href="mailto:moonstarstore001@gmail.com">moonstarstore001@gmail.com</a></p>
+  </section>
+
+  <!-- ===================== REGISTER ===================== -->
+  <section id="view-register" class="view">
+    <div class="logo-top">RILLZY DEX</div>
+    <h2>Daftar Akun</h2>
+    <p class="sub-title">Buat akun baru untuk masuk</p>
+    <form id="form-register" novalidate>
+      <div class="form-group">
+        <label for="reg-nama">Nama</label>
+        <input type="text" id="reg-nama" placeholder="Nama kamu" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-email">Email</label>
+        <input type="email" id="reg-email" placeholder="nama@email.com" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <input type="password" id="reg-password" placeholder="Minimal 6 karakter" autocomplete="new-password" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-pertanyaan">Pertanyaan Verifikasi (untuk lupa sandi)</label>
+        <select id="reg-pertanyaan" required>
+          <option value="">-- Pilih pertanyaan --</option>
+          <option value="Nama hewan peliharaan pertama?">Nama hewan peliharaan pertama?</option>
+          <option value="Nama sekolah dasar?">Nama sekolah dasar?</option>
+          <option value="Kota kelahiran?">Kota kelahiran?</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="reg-jawaban">Jawaban Verifikasi</label>
+        <input type="text" id="reg-jawaban" placeholder="Jawaban rahasia kamu" required />
+      </div>
+      <p id="pesan-register" class="pesan"></p>
+      <button type="submit" class="btn btn-full">Daftar</button>
+    </form>
+    <p style="text-align:center;margin-top:1.4rem;font-size:0.9rem;color:#8A98D8;">
+      Sudah punya akun? <a class="link-kecil" data-nav="login">Masuk</a>
+    </p>
+  </section>
+
+  <!-- ===================== LOGIN ===================== -->
+  <section id="view-login" class="view">
+    <div class="logo-top">RILLZY DEX</div>
+    <h2>Masuk</h2>
+    <p class="sub-title">Masukkan kredensial untuk melanjutkan</p>
+    <form id="form-login" novalidate>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="nama@email.com" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Password kamu" autocomplete="current-password" required />
+      </div>
+      <p id="pesan-login" class="pesan"></p>
+      <button type="submit" class="btn btn-full">Masuk</button>
+    </form>
+    <p style="text-align:center;margin-top:1.4rem;font-size:0.9rem;color:#8A98D8;">
+      <a class="link-kecil" data-nav="lupa">Lupa sandi?</a> &nbsp;|&nbsp;
+      <a class="link-kecil" data-nav="register">Daftar</a>
+    </p>
+  </section>
+
+  <!-- ===================== LUPA SANDI ===================== -->
+  <section id="view-lupa" class="view">
+    <div class="logo-top">RILLZY DEX</div>
+    <h2>Lupa Sandi</h2>
+    <p class="sub-title">Verifikasi identitas untuk reset sandi</p>
+    <form id="form-lupa" novalidate>
+      <div class="form-group">
+        <label for="lupa-email">Email terdaftar</label>
+        <input type="email" id="lupa-email" placeholder="nama@email.com" required />
+      </div>
+      <div class="form-group">
+        <label>Pertanyaan verifikasi</label>
+        <input type="text" id="lupa-pertanyaan" placeholder="Isi email dulu..." readonly />
+      </div>
+      <div class="form-group">
+        <label for="lupa-jawaban">Jawaban verifikasi</label>
+        <input type="text" id="lupa-jawaban" placeholder="Jawaban rahasia kamu" required />
+      </div>
+      <div class="form-group">
+        <label for="lupa-password-baru">Password baru</label>
+        <input type="password" id="lupa-password-baru" placeholder="Minimal 6 karakter" required />
+      </div>
+      <p id="pesan-lupa" class="pesan"></p>
+      <button type="submit" class="btn btn-full">Reset Sandi</button>
+    </form>
+    <p style="text-align:center;margin-top:1.4rem;font-size:0.9rem;color:#8A98D8;">
+      Ingat sandi? <a class="link-kecil" data-nav="login">Masuk</a>
+    </p>
+  </section>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section id="view-dashboard" class="view">
+    <div class="logo-top">RILLZY DEX</div>
+    <h2>Dashboard</h2>
+    <p class="welcome">Selamat datang, <strong id="nama-user">User</strong> ⚡</p>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="label">Status</div>
+        <div class="nilai">Aktif</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Versi</div>
+        <div class="nilai">2026.1</div>
+      </div>
+      <div class="info-card">
+        <div class="label">Email</div>
+        <div class="nilai" id="email-user" style="font-size:0.95rem;">-</div>
+      </div>
+    </div>
+    <div class="btn-area" style="display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-sekunder" id="btn-refresh">🔄 Refresh Data</button>
+      <button class="btn btn-bahaya" id="btn-logout">Keluar</button>
+    </div>
+    <p class="email-info">📩 <a href="mailto:moonstarstore001@gmail.com">moonstarstore001@gmail.com</a></p>
+  </section>
+
+  <footer><p>© <span id="tahun"></span> RILLZY DEX — Cyberpunk 2026 Liquid Glass Smooth</p></footer>
+
+  <script>
+    /* =========================================================
+       KUNCI STORAGE
+    ========================================================= */
+    const KEY_USERS = 'rillzy_dex_users';   // array semua akun
+    const KEY_SESI  = 'rillzy_dex_sesi';    // email user yg sedang login
+
+    /* ---------------------------------------------------------
+       HASH SEDERHANA (bukan pengaman sungguhan, hanya demo)
+       Jangan pakai untuk produksi!
+    --------------------------------------------------------- */
+    function hashSederhana(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return 'h' + Math.abs(h).toString(36);
+    }
+
+    /* ---------------------------------------------------------
+       BACA / TULIS DATA USER
+    --------------------------------------------------------- */
+    function ambilSemuaUser() {
+      try { return JSON.parse(localStorage.getItem(KEY_USERS)) || []; }
+      catch { return []; }
+    }
+    function simpanSemuaUser(list) {
+      localStorage.setItem(KEY_USERS, JSON.stringify(list));
+    }
+    function cariUser(email) {
+      return ambilSemuaUser().find(u => u.email.toLowerCase() === email.toLowerCase());
+    }
+    function simpanSesi(email) { localStorage.setItem(KEY_SESI, email); }
+    function ambilSesi() { return localStorage.getItem(KEY_SESI); }
+    function hapusSesi() { localStorage.removeItem(KEY_SESI); }
+
+    /* =========================================================
+       NAVIGASI
+    ========================================================= */
+    const semuaView = document.querySelectorAll('.view');
+    function tampilkanView(id) {
+      semuaView.forEach(v => v.classList.remove('aktif'));
+      const target = document.getElementById('view-' + id);
+      if (target) target.classList.add('aktif');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.querySelectorAll('[data-nav]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        tampilkanView(el.dataset.nav);
+      });
+    });
+
+    /* =========================================================
+       HELPER PESAN
+    ========================================================= */
+    function setPesan(id, teks, tipe = 'error') {
+      const el = document.getElementById(id);
+      el.textContent = teks;
+      el.className = 'pesan ' + tipe;
+    }
+    function kosongkanPesan(id) {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.className = 'pesan';
+    }
+    function validasiEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    /* =========================================================
+       REGISTER
+    ========================================================= */
+    const formRegister = document.getElementById('form-register');
+    formRegister.addEventListener('submit', function (e) {
+      e.preventDefault();
+      kosongkanPesan('pesan-register');
+
+      const nama     = document.getElementById('reg-nama').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const pertanyaan = document.getElementById('reg-pertanyaan').value;
+      const jawaban  = document.getElementById('reg-jawaban').value.trim();
+
+      if (!nama) return setPesan('pesan-register', 'Nama wajib diisi.');
+      if (!validasiEmail(email)) return setPesan('pesan-register', 'Format email tidak valid.');
+      if (password.length < 6) return setPesan('pesan-register', 'Password minimal 6 karakter.');
+      if (!pertanyaan) return setPesan('pesan-register', 'Pilih pertanyaan verifikasi.');
+      if (!jawaban) return setPesan('pesan-register', 'Jawaban verifikasi wajib diisi.');
+      if (cariUser(email)) return setPesan('pesan-register', 'Email sudah terdaftar. Silakan masuk.');
+
+      const userBaru = {
+        nama,
+        email,
+        passwordHash: hashSederhana(password),
+        pertanyaan,
+        jawabanHash: hashSederhana(jawaban.toLowerCase()),
+        dibuat: new Date().toISOString()
+      };
+
+      const list = ambilSemuaUser();
+      list.push(userBaru);
+      simpanSemuaUser(list);
+
+      setPesan('pesan-register', 'Registrasi berhasil! Mengalihkan ke login...', 'sukses');
+      formRegister.reset();
+      setTimeout(() => tampilkanView('login'), 900);
+    });
+
+    /* =========================================================
+       LOGIN
+    ========================================================= */
+    const formLogin = document.getElementById('form-login');
+    formLogin.addEventListener('submit', function (e) {
+      e.preventDefault();
+      kosongkanPesan('pesan-login');
+
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!validasiEmail(email)) return setPesan('pesan-login', 'Format email tidak valid.');
+      if (!password) return setPesan('pesan-login', 'Password wajib diisi.');
+
+      const user = cariUser(email);
+      if (!user) return setPesan('pesan-login', 'Email belum terdaftar. Silakan daftar dulu.');
+
+      if (user.passwordHash !== hashSederhana(password)) {
+        return setPesan('pesan-login', 'Password salah.');
+      }
+
+      simpanSesi(user.email);
+      setPesan('pesan-login', 'Login berhasil! Mengalihkan...', 'sukses');
+      formLogin.reset();
+      setTimeout(() => bukaDashboard(user), 700);
+    });
+
+    /* =========================================================
+       LUPA SANDI
+    ========================================================= */
+    const inputLupaEmail = document.getElementById('lupa-email');
+    const inputLupaPertanyaan = document.getElementById('lupa-pertanyaan');
+
+    // saat email diisi, tampilkan pertanyaan verifikasi milik user
+    inputLupaEmail.addEventListener('input', function () {
+      const user = cariUser(this.value.trim());
+      inputLupaPertanyaan.value = user ? user.pertanyaan : '';
+    });
+
+    const formLupa = document.getElementById('form-lupa');
+    formLupa.addEventListener('submit', function (e) {
+      e.preventDefault();
+      kosongkanPesan('pesan-lupa');
+
+      const email       = inputLupaEmail.value.trim();
+      const jawaban     = document.getElementById('lupa-jawaban').value.trim();
+      const sandiBaru   = document.getElementById('lupa-password-baru').value;
+
+      if (!validasiEmail(email)) return setPesan('pesan-lupa', 'Format email tidak valid.');
+      const user = cariUser(email);
+      if (!user) return setPesan('pesan-lupa', 'Email tidak terdaftar.');
+
+      if (!jawaban) return setPesan('pesan-lupa', 'Jawaban verifikasi wajib diisi.');
+      if (hashSederhana(jawaban.toLowerCase()) !== user.jawabanHash) {
+        return setPesan('pesan-lupa', 'Jawaban verifikasi salah.');
+      }
+      if (sandiBaru.length < 6) return setPesan('pesan-lupa', 'Password baru minimal 6 karakter.');
+
+      // update password
+      const list = ambilSemuaUser();
+      const idx = list.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+      list[idx].passwordHash = hashSederhana(sandiBaru);
+      simpanSemuaUser(list);
+
+      setPesan('pesan-lupa', 'Sandi berhasil direset! Silakan masuk dengan sandi baru.', 'sukses');
+      formLupa.reset();
+      inputLupaPertanyaan.value = '';
+      setTimeout(() => tampilkanView('login'), 1200);
+    });
+
+    /* =========================================================
+       DASHBOARD
+    ========================================================= */
+    function bukaDashboard(user) {
+      document.getElementById('nama-user').textContent = user.nama;
+      document.getElementById('email-user').textContent = user.email;
+      tampilkanView('dashboard');
+    }
+
+    document.getElementById('btn-logout').addEventListener('click', function () {
+      hapusSesi();
+      tampilkanView('home');
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', function () {
+      const email = ambilSesi();
+      const user = email ? cariUser(email) : null;
+      if (user) {
+        bukaDashboard(user);
+        this.textContent = '✅ Data diperbarui';
+        setTimeout(() => (this.textContent = '🔄 Refresh Data'), 1200);
+      } else {
+        tampilkanView('login');
+      }
+    });
+
+    /* =========================================================
+       INISIALISASI
+    ========================================================= */
+    document.getElementById('tahun').textContent = new Date().getFullYear();
+
+    // kalau ada sesi aktif → langsung dashboard
+    const sesi = ambilSesi();
+    if (sesi) {
+      const user = cariUser(sesi);
+      if (user) bukaDashboard(user);
+    }
+  </script>
+</body>
+</html>
